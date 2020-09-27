@@ -6,6 +6,7 @@
 	<modules>
 		<module>pm-web-client</module>
 		<module>pm-web-test-app</module>
+		<module>pm-web-client-data-report</module>
 	</modules>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
