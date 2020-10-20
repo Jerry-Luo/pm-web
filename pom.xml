@@ -5,8 +5,9 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>pm-web-client</module>
-		<module>pm-web-test-app</module>
+		<module>pm-web-test-webflux-server</module>
 		<module>pm-web-client-data-report</module>
+		<module>pm-web-test-webclient</module>
 	</modules>
 	<parent>
 		<groupId>org.springframework.boot</groupId>

@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>pm-web-test-app</artifactId>
+    <artifactId>pm-web-test-webflux-server</artifactId>
 
     <dependencies>
         <dependency>
