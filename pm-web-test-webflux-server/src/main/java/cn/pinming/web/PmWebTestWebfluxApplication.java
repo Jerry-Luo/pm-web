@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 2020/9/27 10:31
  */
 @SpringBootApplication
-public class PmWebApplication {
+public class PmWebTestWebfluxApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PmWebApplication.class, args);
+        SpringApplication.run(PmWebTestWebfluxApplication.class, args);
     }
 
 }

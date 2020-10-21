@@ -26,7 +26,9 @@ public class AllRouters {
 				.andRoute(POST("/").and(accept(MediaType.APPLICATION_JSON_UTF8)),
 								handler::createUser)
 				// 删除用户
-				.andRoute(DELETE("/{id}"), handler::deleteUserById));
+				.andRoute(DELETE("/{id}"), handler::deleteUserById)
+				.andRoute(GET("/{id}"), handler::getByUserId)
+		);
 	}
 
 }

@@ -11,7 +11,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class PmWebApplicationTests {
+public class PmWebTestWebfluxApplicationTests {
 
     @Test
     public void contextLoads() {
