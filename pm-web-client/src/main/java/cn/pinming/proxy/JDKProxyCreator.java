@@ -1,7 +1,7 @@
 package cn.pinming.proxy;
 
 
-import cn.pinming.ApiServer;
+import cn.pinming.autoconfigure.PmWebClientProperties;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
 import cn.pinming.interfaces.ProxyCreator;
@@ -9,15 +9,8 @@ import cn.pinming.interfaces.RestHandler;
 import cn.pinming.rest.handler.WebClientRestHandler;
 import cn.pinming.util.MetaInfoUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpMethod;
-import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.lang.reflect.Proxy;
 
 /**
  * 使用jdk动态代理实现代理类
@@ -26,6 +19,12 @@ import java.util.Map;
  */
 @Slf4j
 public class JDKProxyCreator implements ProxyCreator {
+
+	private PmWebClientProperties properties;
+
+	public JDKProxyCreator(PmWebClientProperties properties){
+		this.properties = properties;
+	}
 
 	@Override
 	public Object createProxy(Class<?> type) {

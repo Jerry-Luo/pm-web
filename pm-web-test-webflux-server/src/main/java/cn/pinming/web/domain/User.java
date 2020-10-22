@@ -1,7 +1,9 @@
 package cn.pinming.web.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,6 +16,8 @@ import javax.validation.constraints.NotBlank;
 @Document(collection = "user")
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
 	@Id

@@ -28,7 +28,7 @@ public class TestController {
 		// Flux<User> users = userApi.getAllUser();
 		// users.subscribe(System.out::println);
 
-		String id = "5f8e7e5766d6ab517caf7eca";
+		String id = "5f913f5f10eb33353c390595";
 		userApi.getUserById(id).subscribe(user -> {
 			System.out.println("找到用户:" + user);
 		}, e -> {
