@@ -19,8 +19,8 @@ public class ClientFactoryBean<T>  implements FactoryBean<T> {
         //intentionally empty
     }
 
-    public ClientFactoryBean(Class<T> mapperInterface) {
-        this.clientInterface = mapperInterface;
+    public ClientFactoryBean(Class<T> clientInterface) {
+        this.clientInterface = clientInterface;
     }
 
     @Override

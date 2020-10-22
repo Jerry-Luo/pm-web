@@ -94,7 +94,7 @@ public class ClassPathClientScanner extends ClassPathBeanDefinitionScanner {
         for (BeanDefinitionHolder holder : beanDefinitions) {
             definition = (GenericBeanDefinition) holder.getBeanDefinition();
             String beanClassName = definition.getBeanClassName();
-            log.debug("Creating ClientFactoryBean with name '" + holder.getBeanName() + "' and '" + beanClassName + "' mapperInterface");
+            log.debug("Creating ClientFactoryBean with name '" + holder.getBeanName() + "' and '" + beanClassName + "' clientInterface");
 
             // the client interface is the original class of the bean
             // but, the actual class of the bean is MapperFactoryBean
