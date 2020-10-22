@@ -2,6 +2,7 @@ package cn.pinming.autoconfigure;
 
 import cn.pinming.interfaces.ProxyCreator;
 import cn.pinming.proxy.JDKProxyCreator;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,11 +15,11 @@ import org.springframework.context.annotation.Configuration;
 //@ConditionalOnClass({PlatformTransactionManager.class })
 @EnableConfigurationProperties(PmWebClientProperties.class)
 //@AutoConfigureAfter({ DataSourceAutoConfiguration.class })
-public class PmWebClientAutoConfiguration {
+public class PmWebClientAutoConfiguration{
 
     // TODO: 2020/10/22 后期可有其他 creator 的时候可以做成按条件初始化
     @Bean
-    ProxyCreator jdkProxyCreator(PmWebClientProperties properties) {
-        return new JDKProxyCreator(properties);
+    ProxyCreator jdkProxyCreator(PmWebClientProperties properties, DefaultListableBeanFactory beanFactory) {
+        return new JDKProxyCreator(properties, beanFactory);
     }
 }

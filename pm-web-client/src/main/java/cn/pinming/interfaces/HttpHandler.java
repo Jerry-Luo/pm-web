@@ -7,7 +7,7 @@ import cn.pinming.bean.ServerInfo;
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
  * @since 2020/10/20 10:31
  */
-public interface RestHandler {
+public interface HttpHandler {
 
 	/**
 	 * 初始化服务器信息
@@ -21,5 +21,12 @@ public interface RestHandler {
 	 * @return 调用返回结果
 	 */
 	Object invokeRest(MethodInfo methodInfo);
+
+	/**
+	 * 调用普通的表单类型的 http 请求
+	 * @param methodInfo {@link MethodInfo}
+	 * @return 调用返回结果
+	 */
+	Object invokeForm(MethodInfo methodInfo);
 
 }

@@ -3,7 +3,7 @@ package cn.pinming.rest.handler;
 
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
-import cn.pinming.interfaces.RestHandler;
+import cn.pinming.interfaces.HttpHandler;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
  * @since 2020/10/22 11:10
  */
-public class WebClientRestHandler implements RestHandler {
+public class WebClientHttpHandler implements HttpHandler {
 
 	private WebClient client;
 	private RequestBodySpec request;
@@ -63,6 +63,15 @@ public class WebClientRestHandler implements RestHandler {
 		}
 
 		return result;
+	}
+
+	/**
+	 * 处理 from 表单请求
+	 */
+	@Override
+	public Object invokeForm(MethodInfo methodInfo) {
+		// TODO: 2020/10/22
+		return null;
 	}
 
 }

@@ -3,6 +3,7 @@ package cn.pinming.util;
 import cn.pinming.annotation.ApiServer;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +30,10 @@ public class MetaInfoUtil {
      * @param type 用户定义的接口类型
      * @return {@link ServerInfo}
      */
-    public static ServerInfo extractServerInfo(Class<?> type) {
+    public static ServerInfo extractServerInfo(Class<?> type, DefaultListableBeanFactory beanFactory) {
         ServerInfo serverInfo = new ServerInfo();
         ApiServer anno = type.getAnnotation(ApiServer.class);
-        serverInfo.setUrl(anno.value());
+        serverInfo.setUrl(beanFactory.resolveEmbeddedValue(anno.value()));
         return serverInfo;
     }
 

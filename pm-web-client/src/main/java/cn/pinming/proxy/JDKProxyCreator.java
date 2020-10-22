@@ -4,11 +4,12 @@ package cn.pinming.proxy;
 import cn.pinming.autoconfigure.PmWebClientProperties;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
+import cn.pinming.interfaces.HttpHandler;
 import cn.pinming.interfaces.ProxyCreator;
-import cn.pinming.interfaces.RestHandler;
-import cn.pinming.rest.handler.WebClientRestHandler;
+import cn.pinming.rest.handler.WebClientHttpHandler;
 import cn.pinming.util.MetaInfoUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 
 import java.lang.reflect.Proxy;
 
@@ -21,20 +22,23 @@ import java.lang.reflect.Proxy;
 public class JDKProxyCreator implements ProxyCreator {
 
 	private PmWebClientProperties properties;
+	private DefaultListableBeanFactory beanFactory;
 
-	public JDKProxyCreator(PmWebClientProperties properties){
+	public JDKProxyCreator(PmWebClientProperties properties, DefaultListableBeanFactory beanFactory){
 		this.properties = properties;
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public Object createProxy(Class<?> type) {
 		log.info("createProxy:" + type);
 		// 根据接口得到API服务器信息
-		ServerInfo serverInfo = MetaInfoUtil.extractServerInfo(type);
+		ServerInfo serverInfo = MetaInfoUtil.extractServerInfo(type, beanFactory);
 		log.info("serverInfo:" + serverInfo);
 		// 给每一个代理类一个实现
 		// TODO: 2020/10/22 让 webClient 参数可配置
-		RestHandler handler = new WebClientRestHandler();
+
+		HttpHandler handler = new WebClientHttpHandler();
 		// 初始化服务器信息(初始化webclient)
 		handler.init(serverInfo);
 		return Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { type },

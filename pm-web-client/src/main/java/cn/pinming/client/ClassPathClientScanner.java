@@ -101,7 +101,7 @@ public class ClassPathClientScanner extends ClassPathBeanDefinitionScanner {
             definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
             definition.setBeanClass(this.clientFactoryBeanClass);
 
-            // TODO: 2020/10/22 配置注入
+            // TODO: 2020/10/22 inject configurations
             //definition.getPropertyValues().add("addToConfig", this.addToConfig);
 
             definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
