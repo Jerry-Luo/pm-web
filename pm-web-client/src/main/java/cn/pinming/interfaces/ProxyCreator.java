@@ -7,8 +7,8 @@ public interface ProxyCreator {
 	/**
 	 * 创建代理类
 	 * 
-	 * @param type
-	 * @return
+	 * @param type 用户定义的请求接口
+	 * @return 生成的网络请求代理
 	 */
 	Object createProxy(Class<?> type);
 }

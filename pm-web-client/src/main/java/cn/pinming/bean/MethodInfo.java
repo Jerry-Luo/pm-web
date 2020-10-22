@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -28,6 +29,16 @@ public class MethodInfo {
 	 * 请求方法
 	 */
 	private HttpMethod method;
+
+	/**
+	 * 请求体类型
+	 */
+	private MediaType reqeustContentType;
+
+	/**
+	 * 请求头
+	 */
+	private Map<String, String> requestHeaders;
 
 	/**
 	 * 请求参数(url)

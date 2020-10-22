@@ -9,7 +9,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
 import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
 import reactor.core.publisher.Mono;
-
+/**
+ * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
+ * @since 2020/10/22 11:10
+ */
 public class WebClientRestHandler implements RestHandler {
 
 	private WebClient client;
@@ -41,19 +44,16 @@ public class WebClientRestHandler implements RestHandler {
 
 		ResponseSpec retrieve = null;
 
-		// 判断是否带了body
+		// 判断是否带了 body
 		if (methodInfo.getBody() != null) {
 			// 发出请求
-			retrieve = request
-					.body(methodInfo.getBody(), methodInfo.getBodyElementType())
-					.retrieve();
+			retrieve = request.body(methodInfo.getBody(), methodInfo.getBodyElementType()).retrieve();
 		} else {
 			retrieve = request.retrieve();
 		}
 
 		// 处理异常
-		retrieve.onStatus(status -> status.value() == 404,
-				response -> Mono.just(new RuntimeException("Not Found")));
+		retrieve.onStatus(status -> status.value() == 404, response -> Mono.just(new RuntimeException("Not Found")));
 
 		// 处理body
 		if (methodInfo.isReturnFlux()) {
