@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -64,5 +65,10 @@ public class MethodInfo {
 	 * 返回对象的类型
 	 */
 	private Class<?> returnElementType;
+
+	/**
+	 * form 类型请求参数
+	 */
+	private MultiValueMap<String, String> formData;
 
 }

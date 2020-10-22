@@ -1,5 +1,6 @@
 package cn.pinming.interfaces;
 
+import cn.pinming.autoconfigure.PmWebClientProperties;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
 
@@ -13,7 +14,7 @@ public interface HttpHandler {
 	 * 初始化服务器信息
 	 * @param serverInfo {@link ServerInfo}
 	 */
-	void init(ServerInfo serverInfo);
+	void init(ServerInfo serverInfo, PmWebClientProperties properties);
 
 	/**
 	 * 调用rest请求, 返回接口

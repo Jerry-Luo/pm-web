@@ -36,11 +36,9 @@ public class JDKProxyCreator implements ProxyCreator {
 		ServerInfo serverInfo = MetaInfoUtil.extractServerInfo(type, beanFactory);
 		log.info("serverInfo:" + serverInfo);
 		// 给每一个代理类一个实现
-		// TODO: 2020/10/22 让 webClient 参数可配置
-
 		HttpHandler handler = new WebClientHttpHandler();
 		// 初始化服务器信息(初始化webclient)
-		handler.init(serverInfo);
+		handler.init(serverInfo, properties);
 		return Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { type },
 				(proxy, method, args) -> {
 					// 根据方法和参数得到调用信息
