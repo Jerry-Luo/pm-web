@@ -3,7 +3,12 @@ package cn.pinming;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -30,18 +35,18 @@ public class TestController {
 
 		String id = "5f913f5f10eb33353c390595";
 		userApi.getUserById(id).subscribe(user -> {
-			System.out.println("找到用户:" + user);
+			log.info("找到用户:" + user);
 		}, e -> {
 			e.printStackTrace();
-			System.err.println("找不到用户:" + e.getMessage());
+			log.info("找不到用户:" + e.getMessage());
 		});
 
 		id = "5ad1b77560a0791f046e425c";
 		userApi.getUserById(id).subscribe(user -> {
-			System.out.println("找到用户:" + user);
+			log.info("找到用户:" + user);
 		}, e -> {
 			e.printStackTrace();
-			System.err.println("找不到用户:" + e.getMessage());
+			log.info("找不到用户:" + e.getMessage());
 		});
 		//
 		// userApi.deleteUserById(id).subscribe();
@@ -53,4 +58,14 @@ public class TestController {
 
 	}
 
+	@PostMapping("/form")
+	public void testForm(){
+		Map<String, String> param = new HashMap<>();
+		param.put("name", "name-from-test-form");
+		param.put("age", "100");
+		Mono<String> userByForm = userApi.createUserByForm(Mono.just(param));
+		userByForm.subscribe(r->{
+			log.info("调用 form 返回结果 : " + r);
+		});
+	}
 }

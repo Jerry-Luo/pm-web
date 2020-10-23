@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Mono;
 
@@ -34,7 +33,7 @@ public class MethodInfo {
 	/**
 	 * 请求体类型
 	 */
-	private MediaType reqeustContentType;
+	private String reqeustContentType;
 
 	/**
 	 * 请求头
@@ -69,6 +68,6 @@ public class MethodInfo {
 	/**
 	 * form 类型请求参数
 	 */
-	private MultiValueMap<String, String> formData;
+	private Mono<MultiValueMap<String, String>> formData;
 
 }

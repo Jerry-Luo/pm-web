@@ -9,7 +9,10 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.http.MediaType.TEXT_PLAIN;
 import static org.springframework.web.reactive.function.server.ServerResponse.notFound;
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
 /**
@@ -37,7 +40,7 @@ public class UserHandler {
 	}
 
 	public Mono<ServerResponse> createUser(ServerRequest request) {
-		// 2.0.0 是可以工作, 但是2.0.1 下面这个模式是会报异常
+
 		Mono<User> user = request.bodyToMono(User.class);
 
 		return user.flatMap(u -> {
@@ -47,6 +50,13 @@ public class UserHandler {
 			return ok().contentType(APPLICATION_JSON_UTF8)
 					.body(this.repository.save(u), User.class);
 		});
+	}
+
+	public Mono<ServerResponse> createUserByForm(ServerRequest request) {
+
+		Map<String, Object> attributes = request.attributes();
+		return ok().contentType(TEXT_PLAIN)
+					.body(Mono.just("hello createUserByForm"), String.class);
 	}
 
 	public Mono<ServerResponse> deleteUserById(ServerRequest request) {

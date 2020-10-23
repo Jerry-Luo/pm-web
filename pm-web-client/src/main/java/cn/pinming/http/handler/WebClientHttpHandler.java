@@ -1,4 +1,4 @@
-package cn.pinming.rest.handler;
+package cn.pinming.http.handler;
 
 
 import cn.pinming.autoconfigure.PmWebClientProperties;
@@ -9,8 +9,11 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
 import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
@@ -41,7 +44,7 @@ public class WebClientHttpHandler implements HttpHandler {
 
 		//ReactorResourceFactory factory = new ReactorResourceFactory();
 		//factory.setUseGlobalResources(false);
-
+		// TODO: 2020/10/23 配置移到配置文件
 		//配置动态连接池
 		//ConnectionProvider provider = ConnectionProvider.elastic("elastic pool");
 		//配置固定大小连接池，如最大连接数、连接获取超时、空闲连接死亡时间等
@@ -99,7 +102,7 @@ public class WebClientHttpHandler implements HttpHandler {
 		}
 
 		// 处理异常
-		retrieve.onStatus(status -> status.value() == 404, response -> Mono.just(new RuntimeException("Not Found")));
+		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> Mono.just(new RuntimeException("Not Found")));
 
 		// 处理body
 		if (methodInfo.isReturnFlux()) {
@@ -116,7 +119,6 @@ public class WebClientHttpHandler implements HttpHandler {
 	 */
 	@Override
 	public Object invokeForm(MethodInfo methodInfo) {
-		// TODO: 2020/10/22
 		// To send form data, you can provide a MultiValueMap<String, String> as the body. Note that the
 		// content is automatically set to application/x-www-form-urlencoded by the FormHttpMessageWriter. The
 		// following example shows how to use MultiValueMap<String, String>:
@@ -135,7 +137,42 @@ public class WebClientHttpHandler implements HttpHandler {
 		//  .retrieve()
 		//  .bodyToMono(Void.class);
 
-		return null;
+		// 返回结果
+		Object result = null;
+
+		request = this.client
+				.method(methodInfo.getMethod())
+				.uri(methodInfo.getUrl(), methodInfo.getParams())
+				.accept(MediaType.ALL);
+
+		ResponseSpec retrieve = null;
+
+		// 判断是否带了 body
+		if (methodInfo.getFormData() != null) {
+			MultiValueMap<String, String> formDate = methodInfo.getFormData().block();
+			// 发出请求
+			retrieve = request.body(BodyInserters
+					.fromPublisher(methodInfo.getFormData(),
+							new ParameterizedTypeReference<MultiValueMap<String, String>>() {}))
+					.retrieve();
+		} else {
+			retrieve = request.retrieve();
+		}
+
+		// 处理异常
+		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> {
+			log.info("请求出错, status:{}, body:{}", response.statusCode(), response.bodyToMono(String.class));
+			return Mono.just(new RuntimeException("请求出错"));
+		});
+
+		// 处理body
+		if (methodInfo.isReturnFlux()) {
+			result = retrieve.bodyToFlux(methodInfo.getReturnElementType());
+		} else {
+			result = retrieve.bodyToMono(methodInfo.getReturnElementType());
+		}
+
+		return result;
 	}
 
 }

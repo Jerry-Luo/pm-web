@@ -23,11 +23,11 @@ public class AllRouters {
 				// 得到所有用户
 				route(GET("/"), handler::getAllUser)
 				// 创建用户
-				.andRoute(POST("/").and(accept(MediaType.APPLICATION_JSON_UTF8)),
-								handler::createUser)
+				.andRoute(POST("/").and(accept(MediaType.APPLICATION_JSON_UTF8)), handler::createUser)
 				// 删除用户
 				.andRoute(DELETE("/{id}"), handler::deleteUserById)
 				.andRoute(GET("/{id}"), handler::getByUserId)
+				.andRoute(POST("/form").and(accept(MediaType.APPLICATION_FORM_URLENCODED)), handler::createUserByForm)
 		);
 	}
 

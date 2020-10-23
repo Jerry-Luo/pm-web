@@ -4,12 +4,13 @@ package cn.pinming.proxy;
 import cn.pinming.autoconfigure.PmWebClientProperties;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
+import cn.pinming.http.handler.WebClientHttpHandler;
 import cn.pinming.interfaces.HttpHandler;
 import cn.pinming.interfaces.ProxyCreator;
-import cn.pinming.rest.handler.WebClientHttpHandler;
 import cn.pinming.util.MetaInfoUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.http.MediaType;
 
 import java.lang.reflect.Proxy;
 
@@ -44,8 +45,12 @@ public class JDKProxyCreator implements ProxyCreator {
 					// 根据方法和参数得到调用信息
 					MethodInfo methodInfo = MetaInfoUtil.extractMethodInfo(method, args);
 					log.info("methodInfo:" + methodInfo);
-					// 调用rest
-					return handler.invokeRest(methodInfo);
+					if(MediaType.APPLICATION_FORM_URLENCODED_VALUE.equals(methodInfo.getReqeustContentType())){
+						return handler.invokeForm(methodInfo);
+					}else{
+						// 调用rest
+						return handler.invokeRest(methodInfo);
+					}
 		});
 	}
 }
