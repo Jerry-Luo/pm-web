@@ -18,5 +18,9 @@ public class ServerInfo {
 	 * 服务器url
 	 */
 	private String url;
+	/**
+	 * 被注解的接口名称
+	 */
+	private String clientInterfaceName;
 
 }

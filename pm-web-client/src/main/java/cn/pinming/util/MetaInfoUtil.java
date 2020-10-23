@@ -38,6 +38,7 @@ public class MetaInfoUtil {
         ServerInfo serverInfo = new ServerInfo();
         ApiServer anno = type.getAnnotation(ApiServer.class);
         serverInfo.setUrl(beanFactory.resolveEmbeddedValue(anno.value()));
+        serverInfo.setClientInterfaceName(type.getSimpleName());
         return serverInfo;
     }
 

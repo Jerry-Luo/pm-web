@@ -44,21 +44,22 @@ public class WebClientHttpHandler implements HttpHandler {
 
 		//ReactorResourceFactory factory = new ReactorResourceFactory();
 		//factory.setUseGlobalResources(false);
-		// TODO: 2020/10/23 配置移到配置文件
+
 		//配置动态连接池
 		//ConnectionProvider provider = ConnectionProvider.elastic("elastic pool");
 		//配置固定大小连接池，如最大连接数、连接获取超时、空闲连接死亡时间等
-		ConnectionProvider provider = ConnectionProvider.fixed("fixed", 45, 4000);
+		ConnectionProvider provider = ConnectionProvider.fixed("fixed", properties.getMaxConnections(), properties.getAcquireTimeout());
 		HttpClient httpClient = HttpClient.create(provider).tcpConfiguration(tcpClient -> {
 			//指定 Netty 的 select 和 work线程数量
-			LoopResources loop = LoopResources.create("pm-event-loop", 1, 4, true);
+			LoopResources loop = LoopResources.create(properties.getEventLoopThreadPrefix() + serverInfo.getClientInterfaceName(),
+					properties.getSelectCount(), properties.getWorkerCount(), true);
 			return tcpClient.doOnConnected(connection -> {
 				//读写超时设置
-				connection.addHandlerLast(new ReadTimeoutHandler(10))
-						.addHandlerLast(new WriteTimeoutHandler(10));
+				connection.addHandlerLast(new ReadTimeoutHandler(properties.getReadTimeoutSeconds()))
+						.addHandlerLast(new WriteTimeoutHandler(properties.getWriteTimeoutSeconds()));
 			})
 			//连接超时设置
-			.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10 * 1000)
+			.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutSeconds() * 1000)
 			.option(ChannelOption.TCP_NODELAY, true)
 			.runOn(loop);
 		});
@@ -69,7 +70,8 @@ public class WebClientHttpHandler implements HttpHandler {
 				// memory issues. By the default this is configured to 256KB and if that’s not enough for your use case,
 				// you’ll see the following: org.springframework.core.io.buffer.DataBufferLimitException: Exceeded limit on max
 				// bytes to buffer
-				.codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+				.codecs(codecs -> codecs.defaultCodecs()
+						.maxInMemorySize(properties.getMaxInMemorySizeMegaByte() * 1024 * 1024))
 				//.filter()
 				.clientConnector(new ReactorClientHttpConnector(httpClient))
 				.build();
@@ -138,14 +140,14 @@ public class WebClientHttpHandler implements HttpHandler {
 		//  .bodyToMono(Void.class);
 
 		// 返回结果
-		Object result = null;
+		Object result;
 
 		request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				.accept(MediaType.ALL);
 
-		ResponseSpec retrieve = null;
+		ResponseSpec retrieve;
 
 		// 判断是否带了 body
 		if (methodInfo.getFormData() != null) {
