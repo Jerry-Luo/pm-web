@@ -37,16 +37,14 @@ public class TestController {
 		userApi.getUserById(id).subscribe(user -> {
 			log.info("找到用户:" + user);
 		}, e -> {
-			e.printStackTrace();
-			log.info("找不到用户:" + e.getMessage());
+			log.error("找不到用户:", e);
 		});
 
 		id = "5ad1b77560a0791f046e425c";
 		userApi.getUserById(id).subscribe(user -> {
 			log.info("找到用户:" + user);
 		}, e -> {
-			e.printStackTrace();
-			log.info("找不到用户:" + e.getMessage());
+			log.error("找不到用户:", e);
 		});
 		//
 		// userApi.deleteUserById(id).subscribe();

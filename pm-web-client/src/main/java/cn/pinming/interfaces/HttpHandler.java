@@ -3,6 +3,7 @@ package cn.pinming.interfaces;
 import cn.pinming.autoconfigure.PmWebClientProperties;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
+import cn.pinming.interceptor.InterceptorChain;
 
 /**
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
@@ -14,7 +15,7 @@ public interface HttpHandler {
 	 * 初始化服务器信息
 	 * @param serverInfo {@link ServerInfo}
 	 */
-	void init(ServerInfo serverInfo, PmWebClientProperties properties);
+	void init(ServerInfo serverInfo, PmWebClientProperties properties, InterceptorChain interceptorChain);
 
 	/**
 	 * 调用rest请求, 返回接口

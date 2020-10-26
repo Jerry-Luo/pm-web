@@ -4,23 +4,32 @@ package cn.pinming.http.handler;
 import cn.pinming.autoconfigure.PmWebClientProperties;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
+import cn.pinming.interceptor.InterceptorChain;
 import cn.pinming.interfaces.HttpHandler;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
 import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
 import reactor.core.publisher.Mono;
+import reactor.netty.channel.BootstrapHandlers;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
+
+import java.lang.reflect.Field;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
@@ -32,11 +41,13 @@ public class WebClientHttpHandler implements HttpHandler {
 	private WebClient client;
 	private RequestBodySpec request;
 
+	private static final String PM_WEBCLIENT_START_TIME = "PM_WEBCLIENT_START_TIME";
+
 	/**
 	 * 初始化webclient
 	 */
 	@Override
-	public void init(ServerInfo serverInfo, PmWebClientProperties properties) {
+	public void init(ServerInfo serverInfo, PmWebClientProperties properties, InterceptorChain interceptorChain) {
 		//By default, HttpClient participates in the global Reactor Netty resources held in
 		//reactor.netty.http.HttpResources, including event loop threads and a connection pool. This is the
 		//recommended mode, since fixed, shared resources are preferred for event loop concurrency. In this
@@ -53,19 +64,47 @@ public class WebClientHttpHandler implements HttpHandler {
 			//指定 Netty 的 select 和 work线程数量
 			LoopResources loop = LoopResources.create(properties.getEventLoopThreadPrefix() + serverInfo.getClientInterfaceName(),
 					properties.getSelectCount(), properties.getWorkerCount(), true);
-			return tcpClient.doOnConnected(connection -> {
-				//读写超时设置
-				connection.addHandlerLast(new ReadTimeoutHandler(properties.getReadTimeoutSeconds()))
-						.addHandlerLast(new WriteTimeoutHandler(properties.getWriteTimeoutSeconds()));
-			})
-			//连接超时设置
-			.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutSeconds() * 1000)
-			.option(ChannelOption.TCP_NODELAY, true)
-			.runOn(loop);
+			return tcpClient
+					.bootstrap(bootstrap -> BootstrapHandlers.updateLogSupport(bootstrap, new CustomLogger(HttpClient.class)))
+					.doOnConnected(connection -> {
+						//读写超时设置
+						connection.addHandlerLast(new ReadTimeoutHandler(properties.getReadTimeoutSeconds()))
+								.addHandlerLast(new WriteTimeoutHandler(properties.getWriteTimeoutSeconds()));
+					})
+					//连接超时设置
+					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutSeconds() * 1000)
+					.option(ChannelOption.TCP_NODELAY, true)
+					.runOn(loop);
 		});
+		// Having enabled the wiretap, each request and response will be logged in full detail.
+		//.wiretap(true);
 
 		this.client = WebClient.builder()
 				.baseUrl(serverInfo.getUrl())
+				//.filter(logRequest())
+				//.filter(logResponse())
+				.filter((clientRequest, exchangeFunction) ->{
+					if (!interceptorChain.applyPre(clientRequest)){
+						// TODO: 2020/10/26 换个编码
+						log.warn("请求被拦截，本次请求作废{}", clientRequest.url().toString());
+						return Mono.just(ClientResponse.create(HttpStatus.resolve(500)).build());
+					}
+					return exchangeFunction.exchange(clientRequest).doOnEach((signal) -> {
+						Instant start = signal.getContext().get(PM_WEBCLIENT_START_TIME);
+						ClientResponse clientResponse = signal.get();
+						Throwable throwable = signal.getThrowable();
+						if (signal.isOnComplete()){
+							final long cost = Duration.between(start, Instant.now()).toMillis();
+							log.info("signal.isOnComplete {} request time: [{}], resp:{}", clientRequest.logPrefix(), cost, clientResponse);
+							interceptorChain.applyPost(clientRequest, clientResponse, new RequestInfo(clientRequest.url().toString(), cost, start.toEpochMilli()));
+						}
+						if (signal.isOnError()){
+							final long cost = Duration.between(start, Instant.now()).toMillis();
+							log.error("signal.isOnError {} request time: [{}]", clientRequest.logPrefix(), cost, throwable);
+							interceptorChain.applyError(clientRequest, clientResponse, new RequestInfo(clientRequest.url().toString(), cost, start.toEpochMilli()));
+						}
+					}).subscriberContext((context) -> context.put(PM_WEBCLIENT_START_TIME, Instant.now()));
+				})
 				// Spring WebFlux configures limits for buffering data in-memory in codec to avoid application
 				// memory issues. By the default this is configured to 256KB and if that’s not enough for your use case,
 				// you’ll see the following: org.springframework.core.io.buffer.DataBufferLimitException: Exceeded limit on max
@@ -177,4 +216,25 @@ public class WebClientHttpHandler implements HttpHandler {
 		return result;
 	}
 
+	private ExchangeFilterFunction logRequest() {
+		return (clientRequest, next) -> {
+			log.info("{} Request: {} {}", clientRequest.logPrefix(), clientRequest.method(), clientRequest.url());
+			//clientRequest.headers().forEach((name, values) -> values.forEach(value -> log.info("{}={}", name, value)));
+			return next.exchange(clientRequest);
+		};
+	}
+
+	private ExchangeFilterFunction logResponse() {
+		return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
+			try{
+				Field logPrefix = clientResponse.getClass().getDeclaredField("logPrefix");
+				logPrefix.setAccessible(true);
+				String identify = (String)logPrefix.get(clientResponse);
+				log.info("{} Response: {}", identify, clientResponse);
+			}catch (Exception e){
+				log.info("Response: {}", clientResponse);
+			}
+			return Mono.just(clientResponse);
+		});
+	}
 }
