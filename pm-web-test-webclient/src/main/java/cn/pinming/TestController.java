@@ -1,5 +1,7 @@
 package cn.pinming;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -64,6 +66,21 @@ public class TestController {
 		Mono<String> userByForm = userApi.createUserByForm(Mono.just(param));
 		userByForm.subscribe(r->{
 			log.info("调用 form 返回结果 : " + r);
+		}, e -> {
+			log.error("请求异常:", e);
+		});
+	}
+
+	@PostMapping("/rawbody")
+	public void testRawBody() throws JsonProcessingException {
+		Map<String, String> param = new HashMap<>();
+		param.put("name", "name-from-test-form");
+		param.put("age", "100");
+		Mono<String> userByForm = userApi.createUserByRawBody(Mono.just(new ObjectMapper().writeValueAsString(param)));
+		userByForm.subscribe(r->{
+			log.info("调用 form 返回结果 : " + r);
+		},e -> {
+			log.error("请求异常:", e);
 		});
 	}
 }

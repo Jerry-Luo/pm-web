@@ -51,8 +51,12 @@ public class JDKProxyCreator implements ProxyCreator {
 					if(MediaType.APPLICATION_FORM_URLENCODED_VALUE.equals(methodInfo.getReqeustContentType())){
 						return handler.invokeForm(methodInfo);
 					}else{
-						// 调用rest
-						return handler.invokeRest(methodInfo);
+						if (methodInfo.isRawRequest()){
+							return handler.invokePlain(methodInfo);
+						}else{
+							// 调用rest
+							return handler.invokeRest(methodInfo);
+						}
 					}
 		});
 	}

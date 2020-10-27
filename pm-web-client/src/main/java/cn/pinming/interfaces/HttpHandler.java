@@ -31,4 +31,11 @@ public interface HttpHandler {
 	 */
 	Object invokeForm(MethodInfo methodInfo);
 
+	/**
+	 * 直接推送原始报文
+	 * @param methodInfo {@link MethodInfo}
+	 * @return 调用返回结果
+	 */
+	Object invokePlain(MethodInfo methodInfo);
+
 }

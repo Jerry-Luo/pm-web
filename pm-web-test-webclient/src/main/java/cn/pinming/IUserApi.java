@@ -1,13 +1,17 @@
 package cn.pinming;
 
 import cn.pinming.annotation.ApiServer;
+import cn.pinming.annotation.PlainRequestBody;
 import cn.pinming.annotation.RequestForm;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
-
+/**
+ * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
+ * @since 2020/10/27 18:18
+ */
 @ApiServer("${user.api.baseUrl}")
 public interface IUserApi {
 
@@ -25,4 +29,7 @@ public interface IUserApi {
 
 	@PostMapping("/form")
 	Mono<String> createUserByForm(@RequestForm Mono<Map<String, String>> param);
+
+	@PostMapping("/")
+	Mono<String> createUserByRawBody(@PlainRequestBody Mono<String> body);
 }

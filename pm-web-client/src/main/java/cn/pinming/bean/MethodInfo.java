@@ -70,4 +70,9 @@ public class MethodInfo {
 	 */
 	private Mono<MultiValueMap<String, String>> formData;
 
+	/**
+	 * 是否直接发送 String 类型的报文内容
+	 */
+	private boolean rawRequest = false;
+
 }

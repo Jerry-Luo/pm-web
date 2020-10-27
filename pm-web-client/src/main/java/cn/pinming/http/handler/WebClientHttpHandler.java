@@ -4,6 +4,7 @@ package cn.pinming.http.handler;
 import cn.pinming.autoconfigure.PmWebClientProperties;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
+import cn.pinming.exception.PmWebClientException;
 import cn.pinming.interceptor.InterceptorChain;
 import cn.pinming.interfaces.HttpHandler;
 import io.netty.channel.ChannelOption;
@@ -11,7 +12,6 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.MultiValueMap;
@@ -86,8 +86,9 @@ public class WebClientHttpHandler implements HttpHandler {
 				.filter((clientRequest, exchangeFunction) ->{
 					if (!interceptorChain.applyPre(clientRequest)){
 						// TODO: 2020/10/26 换个编码
-						log.warn("请求被拦截，本次请求作废{}", clientRequest.url().toString());
-						return Mono.just(ClientResponse.create(HttpStatus.resolve(500)).build());
+						log.warn("请求被拦截，本次请求作废 {}", clientRequest.url().toString());
+						//return Mono.just(ClientResponse.create(HttpStatus.resolve(500)).build());
+						throw new PmWebClientException(String.format("请求被拦截，本次请求作废 %s", clientRequest.url().toString()));
 					}
 					return exchangeFunction.exchange(clientRequest).doOnEach((signal) -> {
 						Instant start = signal.getContext().get(PM_WEBCLIENT_START_TIME);
@@ -129,6 +130,7 @@ public class WebClientHttpHandler implements HttpHandler {
 				.method(methodInfo.getMethod())
 				// 请求url 和 参数
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
+				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
 				//
 				.accept(MediaType.APPLICATION_JSON);
 
@@ -143,7 +145,11 @@ public class WebClientHttpHandler implements HttpHandler {
 		}
 
 		// 处理异常
-		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> Mono.just(new RuntimeException("Not Found")));
+		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> {
+			String msg = String.format("请求出错, status:%s, body:%s", response.statusCode(), response.bodyToMono(String.class).block());
+			log.info(msg);
+			return Mono.just(new PmWebClientException(msg));
+		});
 
 		// 处理body
 		if (methodInfo.isReturnFlux()) {
@@ -184,6 +190,7 @@ public class WebClientHttpHandler implements HttpHandler {
 		request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
+				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
 				.accept(MediaType.ALL);
 
 		ResponseSpec retrieve;
@@ -202,8 +209,48 @@ public class WebClientHttpHandler implements HttpHandler {
 
 		// 处理异常
 		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> {
-			log.info("请求出错, status:{}, body:{}", response.statusCode(), response.bodyToMono(String.class));
-			return Mono.just(new RuntimeException("请求出错"));
+			String msg = String.format("请求出错, status:%s, body:%s", response.statusCode(), response.bodyToMono(String.class).block());
+			log.info(msg);
+			return Mono.just(new PmWebClientException(msg));
+		});
+
+
+		// 处理body
+		if (methodInfo.isReturnFlux()) {
+			result = retrieve.bodyToFlux(methodInfo.getReturnElementType());
+		} else {
+			result = retrieve.bodyToMono(methodInfo.getReturnElementType());
+		}
+
+		return result;
+	}
+
+	@Override
+	public Object invokePlain(MethodInfo methodInfo) {
+		// 返回结果
+		Object result;
+
+		request = this.client
+				.method(methodInfo.getMethod())
+				.uri(methodInfo.getUrl(), methodInfo.getParams())
+				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
+				.accept(MediaType.ALL);
+
+		ResponseSpec retrieve;
+
+		// 判断是否带了 body
+		if (methodInfo.getBody() != null) {
+			// 发出请求
+			retrieve = request.body(BodyInserters.fromPublisher(methodInfo.getBody(), methodInfo.getBodyElementType())).retrieve();
+		} else {
+			retrieve = request.retrieve();
+		}
+
+		// 处理异常
+		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> {
+			String msg = String.format("请求出错, status:%s, body:%s", response.statusCode(), response.bodyToMono(String.class).block());
+			log.info(msg);
+			return Mono.just(new PmWebClientException(msg));
 		});
 
 		// 处理body

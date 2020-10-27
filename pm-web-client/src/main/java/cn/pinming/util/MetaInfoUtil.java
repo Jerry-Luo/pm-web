@@ -1,6 +1,7 @@
 package cn.pinming.util;
 
 import cn.pinming.annotation.ApiServer;
+import cn.pinming.annotation.PlainRequestBody;
 import cn.pinming.annotation.RequestForm;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
@@ -100,12 +101,12 @@ public class MetaInfoUtil {
         for (int i = 0; i < parameters.length; i++) {
             // 是否带 @PathVariable
             PathVariable annoPath = parameters[i].getAnnotation(PathVariable.class);
-            if (annoPath != null) {
+            if (Objects.nonNull(annoPath)) {
                 params.put(annoPath.value(), args[i]);
             }
             // 是否带了 RequestBody
             RequestBody annoBody = parameters[i].getAnnotation(RequestBody.class);
-            if (annoBody != null) {
+            if (Objects.nonNull(annoBody)) {
                 methodInfo.setBody((Mono<?>) args[i]);
                 // 请求对象的实际类型
                 methodInfo.setBodyElementType(extractElementType(parameters[i].getParameterizedType()));
@@ -113,12 +114,19 @@ public class MetaInfoUtil {
             }
             // TODO: 2020/10/23 提供 RequestHeader 的支持
             RequestForm annoForm = parameters[i].getAnnotation(RequestForm.class);
-            if (annoForm != null) {
+            if (Objects.nonNull(annoForm)) {
                 MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
                 Mono<Map<String, String>> p = (Mono<Map<String, String>>)args[i];
                 p.subscribe(m -> m.forEach(formData::add));
                 methodInfo.setFormData(Mono.just(formData));
                 methodInfo.setReqeustContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE);
+            }
+            PlainRequestBody annoPlainBody = parameters[i].getAnnotation(PlainRequestBody.class);
+            if (Objects.nonNull(annoPlainBody)){
+                methodInfo.setBody((Mono<?>) args[i]);
+                methodInfo.setBodyElementType(extractElementType(parameters[i].getParameterizedType()));
+                methodInfo.setReqeustContentType(annoPlainBody.contentType());
+                methodInfo.setRawRequest(true);
             }
         }
     }
