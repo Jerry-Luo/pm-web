@@ -80,6 +80,19 @@
 		</repository>
 	</repositories>
 
+	<distributionManagement>
+		<repository>
+			<id>pinming-nexus-releases</id>
+			<name>Nexus Release Repository</name>
+			<url>http://nexus.pinming.org/repository/maven-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>pinming-nexus-snapshots</id>
+			<name>Nexus Snapshot Repository</name>
+			<url>http://nexus.pinming.org/repository/maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 	<pluginRepositories>
 		<pluginRepository>
 			<id>nexus</id>
