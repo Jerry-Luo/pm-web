@@ -6,9 +6,11 @@ import cn.pinming.interfaces.ProxyCreator;
 import cn.pinming.proxy.JDKProxyCreator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 
 import java.util.List;
 
@@ -17,9 +19,8 @@ import java.util.List;
  * @since 2020/10/22 13:48
  */
 @Configuration
-//@ConditionalOnClass({PlatformTransactionManager.class })
 @EnableConfigurationProperties(PmWebClientProperties.class)
-//@AutoConfigureAfter({ DataSourceAutoConfiguration.class })
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 public class PmWebClientAutoConfiguration{
 
     // TODO: 2020/10/22 后期可有其他 creator 的时候可以做成按条件初始化

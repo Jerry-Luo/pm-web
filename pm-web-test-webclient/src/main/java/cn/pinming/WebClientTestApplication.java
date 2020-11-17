@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 2020/10/21 13:47
  */
 @SpringBootApplication
-@EnablePmWebClient(basePackages = {"cn.pinming"})
+@EnablePmWebClient("cn.pinming")
 public class WebClientTestApplication {
 
     public static void main(String[] args) {
