@@ -56,4 +56,35 @@ public interface IUserApi {
 }
 ```
 
+#### 4. 如果需要对请求做拦截只需要定义实现 `cn.pinming.interceptor.Interceptor` 的 spring bean 即可, 支持定义多个;
+样例：
+```java
+/**
+ * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
+ * @since 2020/10/26 18:17
+ */
+@Component
+@Slf4j
+public class TestInterceptor implements Interceptor {
+    @Override
+    public boolean applyPre(ClientRequest clientRequest) {
+        int i = ThreadLocalRandom.current().nextInt();
+        if (i % 2 == 0){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void applyPost(ClientRequest clientRequest, ClientResponse clientResponse, RequestInfo requestInfo) {
+        log.info(requestInfo.toString());
+    }
+
+    @Override
+    public void applyError(ClientRequest clientRequest, ClientResponse clientResponse, RequestInfo requestInfo) {
+        log.info(requestInfo.toString());
+    }
+}
+```
+
 
