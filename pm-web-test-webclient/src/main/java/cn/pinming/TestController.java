@@ -63,7 +63,11 @@ public class TestController {
 		Map<String, String> param = new HashMap<>();
 		param.put("name", "name-from-test-form");
 		param.put("age", "100");
-		Mono<String> userByForm = userApi.createUserByForm(Mono.just(param));
+		Map<String, String> headers = new HashMap<>();
+		headers.put("testHeader1", "testHeaderValue1");
+		headers.put("testHeader2", "testHeaderValue2");
+		headers.put("testHeader3", "testHeaderValue3");
+		Mono<String> userByForm = userApi.createUserByForm(Mono.just(param), "hello access token", headers);
 		userByForm.subscribe(r->{
 			log.info("调用 form 返回结果 : " + r);
 		}, e -> {

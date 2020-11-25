@@ -28,7 +28,7 @@ public interface IUserApi {
 	Mono<User> createUser(@RequestBody Mono<User> user);
 
 	@PostMapping("/form")
-	Mono<String> createUserByForm(@RequestForm Mono<Map<String, String>> param);
+	Mono<String> createUserByForm(@RequestForm Mono<Map<String, String>> param, @RequestHeader("accessToken") String token, @RequestHeader Map<String,String> headers);
 
 	@PostMapping("/")
 	Mono<String> createUserByRawBody(@PlainRequestBody Mono<String> body);

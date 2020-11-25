@@ -90,6 +90,7 @@ public class MetaInfoUtil {
      * @param args 方法参数
      * @param methodInfo {@link MethodInfo}
      */
+    @SuppressWarnings("unchecked")
     public static void extractRequestParamAndBody(Method method, Object[] args, MethodInfo methodInfo) {
         // 得到调用的参数和body
         Parameter[] parameters = method.getParameters();
@@ -99,6 +100,21 @@ public class MetaInfoUtil {
         methodInfo.setParams(params);
 
         for (int i = 0; i < parameters.length; i++) {
+            // RequestHeader 的支持
+            RequestHeader annoHeader = parameters[i].getAnnotation(RequestHeader.class);
+            if (Objects.nonNull(annoHeader)){
+                if (Objects.isNull(methodInfo.getRequestHeaders())){
+                    methodInfo.setRequestHeaders(new LinkedHashMap<>());
+                }
+                if (args[i] instanceof Map){
+                    ((Map<String, String>) args[i]).forEach((k, v)->{
+                        methodInfo.getRequestHeaders().put(k, v);
+                    });
+                }else if (args[i] instanceof String){
+                    methodInfo.getRequestHeaders().put(annoHeader.value(), (String)args[i]);
+                }
+            }
+
             // 是否带 @PathVariable
             PathVariable annoPath = parameters[i].getAnnotation(PathVariable.class);
             if (Objects.nonNull(annoPath)) {
@@ -112,7 +128,6 @@ public class MetaInfoUtil {
                 methodInfo.setBodyElementType(extractElementType(parameters[i].getParameterizedType()));
                 methodInfo.setReqeustContentType(MediaType.APPLICATION_JSON_VALUE);
             }
-            // TODO: 2020/10/23 提供 RequestHeader 的支持
             RequestForm annoForm = parameters[i].getAnnotation(RequestForm.class);
             if (Objects.nonNull(annoForm)) {
                 MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();

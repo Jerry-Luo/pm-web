@@ -30,6 +30,7 @@ import reactor.netty.resources.LoopResources;
 import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
@@ -121,43 +122,39 @@ public class WebClientHttpHandler implements HttpHandler {
 	 * 处理rest请求
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public Object invokeRest(MethodInfo methodInfo) {
-		// 返回结果
-		Object result = null;
-
+		Object result;
 		request = this.client
-				// 请求方法
 				.method(methodInfo.getMethod())
-				// 请求url 和 参数
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
-				//
-				.accept(MediaType.APPLICATION_JSON);
-
-		ResponseSpec retrieve = null;
-
-		// 判断是否带了 body
+				.accept(MediaType.APPLICATION_JSON)
+				.headers(headers-> {
+					if(Objects.isNull(methodInfo.getRequestHeaders())){
+						return;
+					}
+					methodInfo.getRequestHeaders().forEach(headers::add);
+				});
+		ResponseSpec retrieve;
 		if (methodInfo.getBody() != null) {
 			// 发出请求
 			retrieve = request.body(methodInfo.getBody(), methodInfo.getBodyElementType()).retrieve();
 		} else {
 			retrieve = request.retrieve();
 		}
-
 		// 处理异常
 		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> {
 			String msg = String.format("请求出错, status:%s, body:%s", response.statusCode(), response.bodyToMono(String.class).block());
 			log.info(msg);
 			return Mono.just(new PmWebClientException(msg));
 		});
-
 		// 处理body
 		if (methodInfo.isReturnFlux()) {
 			result = retrieve.bodyToFlux(methodInfo.getReturnElementType());
 		} else {
 			result = retrieve.bodyToMono(methodInfo.getReturnElementType());
 		}
-
 		return result;
 	}
 
@@ -184,17 +181,19 @@ public class WebClientHttpHandler implements HttpHandler {
 		//  .retrieve()
 		//  .bodyToMono(Void.class);
 
-		// 返回结果
 		Object result;
-
 		request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
-				.accept(MediaType.ALL);
-
+				.accept(MediaType.ALL)
+				.headers(headers-> {
+					if(Objects.isNull(methodInfo.getRequestHeaders())){
+						return;
+					}
+					methodInfo.getRequestHeaders().forEach(headers::add);
+				});
 		ResponseSpec retrieve;
-
 		// 判断是否带了 body
 		if (methodInfo.getFormData() != null) {
 			MultiValueMap<String, String> formDate = methodInfo.getFormData().block();
@@ -206,60 +205,55 @@ public class WebClientHttpHandler implements HttpHandler {
 		} else {
 			retrieve = request.retrieve();
 		}
-
 		// 处理异常
 		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> {
 			String msg = String.format("请求出错, status:%s, body:%s", response.statusCode(), response.bodyToMono(String.class).block());
 			log.info(msg);
 			return Mono.just(new PmWebClientException(msg));
 		});
-
-
 		// 处理body
 		if (methodInfo.isReturnFlux()) {
 			result = retrieve.bodyToFlux(methodInfo.getReturnElementType());
 		} else {
 			result = retrieve.bodyToMono(methodInfo.getReturnElementType());
 		}
-
 		return result;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Object invokePlain(MethodInfo methodInfo) {
-		// 返回结果
 		Object result;
-
 		request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
-				.accept(MediaType.ALL);
-
+				.accept(MediaType.ALL)
+				.headers(headers-> {
+					if(Objects.isNull(methodInfo.getRequestHeaders())){
+						return;
+					}
+					methodInfo.getRequestHeaders().forEach(headers::add);
+				});
 		ResponseSpec retrieve;
-
-		// 判断是否带了 body
 		if (methodInfo.getBody() != null) {
 			// 发出请求
 			retrieve = request.body(BodyInserters.fromPublisher(methodInfo.getBody(), methodInfo.getBodyElementType())).retrieve();
 		} else {
 			retrieve = request.retrieve();
 		}
-
 		// 处理异常
 		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> {
 			String msg = String.format("请求出错, status:%s, body:%s", response.statusCode(), response.bodyToMono(String.class).block());
 			log.info(msg);
 			return Mono.just(new PmWebClientException(msg));
 		});
-
 		// 处理body
 		if (methodInfo.isReturnFlux()) {
 			result = retrieve.bodyToFlux(methodInfo.getReturnElementType());
 		} else {
 			result = retrieve.bodyToMono(methodInfo.getReturnElementType());
 		}
-
 		return result;
 	}
 
