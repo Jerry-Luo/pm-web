@@ -5,23 +5,28 @@ import cn.pinming.annotation.PlainRequestBody;
 import cn.pinming.annotation.RequestForm;
 import cn.pinming.bean.MethodInfo;
 import cn.pinming.bean.ServerInfo;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
@@ -70,8 +75,8 @@ public class MetaInfoUtil {
         boolean isFlux = method.getReturnType().isAssignableFrom(Flux.class);
         methodInfo.setReturnFlux(isFlux);
         // 得到返回对象的实际类型
-        Class<?> elementType = extractElementType(method.getGenericReturnType());
-        methodInfo.setReturnElementType(elementType);
+//        Class<?> elementType = extractElementType(method.getGenericReturnType());
+        methodInfo.setReturnElementType(extractElementType(method.getGenericReturnType()));
     }
 
     /**
@@ -79,9 +84,10 @@ public class MetaInfoUtil {
      * @param genericReturnType 带泛型的返回类型
      * @return 实际的参数类型
      */
-    public static Class<?> extractElementType(Type genericReturnType) {
-        Type[] actualTypeArguments = ((ParameterizedType) genericReturnType).getActualTypeArguments();
-        return (Class<?>) actualTypeArguments[0];
+    public static ParameterizedTypeReference<?> extractElementType(Type genericReturnType) {
+        return ParameterizedTypeReference.forType(genericReturnType);
+//        Type[] actualTypeArguments = ((ParameterizedType) genericReturnType).getActualTypeArguments();
+//        return (Class<?>) actualTypeArguments[0];
     }
 
     /**
@@ -94,7 +100,6 @@ public class MetaInfoUtil {
     public static void extractRequestParamAndBody(Method method, Object[] args, MethodInfo methodInfo) {
         // 得到调用的参数和body
         Parameter[] parameters = method.getParameters();
-
         // 参数和值对应的 map
         Map<String, Object> params = new LinkedHashMap<>();
         methodInfo.setParams(params);

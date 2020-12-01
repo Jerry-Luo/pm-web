@@ -1,14 +1,14 @@
 package cn.pinming.bean;
 
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Mono;
-
-import java.util.Map;
 
 /**
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
@@ -53,7 +53,7 @@ public class MethodInfo {
 	/**
 	 * 请求body的类型
 	 */
-	private Class<?> bodyElementType;
+	private ParameterizedTypeReference<?> bodyElementType;
 	
 	/**
 	 * 返回是flux还是mono
@@ -63,7 +63,7 @@ public class MethodInfo {
 	/**
 	 * 返回对象的类型
 	 */
-	private Class<?> returnElementType;
+	private ParameterizedTypeReference<?> returnElementType;
 
 	/**
 	 * form 类型请求参数
