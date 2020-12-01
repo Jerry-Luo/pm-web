@@ -4,11 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,9 +65,9 @@ public class TestController {
 
 	@PostMapping("/form")
 	public void testForm(){
-		Map<String, String> param = new HashMap<>();
-		param.put("name", "name-from-test-form");
-		param.put("age", "100");
+		MultiValueMap<String, String> param = new LinkedMultiValueMap<>();
+		param.put("name", Collections.singletonList("name-from-test-form"));
+		param.put("age", Collections.singletonList("100"));
 		Map<String, String> headers = new HashMap<>();
 		headers.put("testHeader1", "testHeaderValue1");
 		headers.put("testHeader2", "testHeaderValue2");
@@ -73,6 +78,18 @@ public class TestController {
 		}, e -> {
 			log.error("请求异常:", e);
 		});
+
+		log.info("传个文件试试");
+		MultipartBodyBuilder builder = new MultipartBodyBuilder();
+   		builder.part("fieldPart", "fieldValue");
+   		builder.part("filePart", new FileSystemResource("C:/Users/pms/Desktop/images/n_v28fd94202c8eb436f87dd6c2e67c8ce73.jpg"));
+		Mono<String> userByForm1 = userApi.createUserByForm(Mono.just(builder.build()), "hello access token", headers);
+		userByForm1.subscribe(r->{
+			log.info("调用 multipart 返回结果 : " + r);
+		}, e -> {
+			log.error("请求异常:", e);
+		});
+
 	}
 
 	@PostMapping("/rawbody")
