@@ -11,7 +11,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.MultiValueMap;
@@ -185,7 +184,8 @@ public class WebClientHttpHandler implements HttpHandler {
 		request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
-				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
+				// 要支持 multipart 这里不指定，让框架自己决定使用什么 content-type
+				//.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
 				.accept(MediaType.ALL)
 				.headers(headers-> {
 					if(Objects.isNull(methodInfo.getRequestHeaders())){
@@ -196,12 +196,13 @@ public class WebClientHttpHandler implements HttpHandler {
 		ResponseSpec retrieve;
 		// 判断是否带了 body
 		if (methodInfo.getFormData() != null) {
-			MultiValueMap<String, String> formDate = methodInfo.getFormData().block();
+			MultiValueMap<String, ?> formData = methodInfo.getFormData().block();
 			// 发出请求
-			retrieve = request.body(BodyInserters
-					.fromPublisher(methodInfo.getFormData(),
-							new ParameterizedTypeReference<MultiValueMap<String, String>>() {}))
-					.retrieve();
+			//retrieve = request.body(BodyInserters
+			//		.fromPublisher(methodInfo.getFormData(),
+			//				new ParameterizedTypeReference<MultiValueMap<String, String>>() {}))
+			//		.retrieve();
+			retrieve = request.syncBody(formData).retrieve();
 		} else {
 			retrieve = request.retrieve();
 		}

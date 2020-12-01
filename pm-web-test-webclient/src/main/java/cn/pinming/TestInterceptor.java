@@ -3,7 +3,6 @@ package cn.pinming;
 import cn.pinming.http.handler.RequestInfo;
 import cn.pinming.interceptor.Interceptor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
@@ -13,7 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
  * @since 2020/10/26 18:17
  */
-@Component
+//@Component
 @Slf4j
 public class TestInterceptor implements Interceptor {
     @Override

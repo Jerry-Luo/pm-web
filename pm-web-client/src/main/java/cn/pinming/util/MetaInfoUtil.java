@@ -8,7 +8,6 @@ import cn.pinming.bean.ServerInfo;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -130,10 +129,11 @@ public class MetaInfoUtil {
             }
             RequestForm annoForm = parameters[i].getAnnotation(RequestForm.class);
             if (Objects.nonNull(annoForm)) {
-                MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-                Mono<Map<String, String>> p = (Mono<Map<String, String>>)args[i];
-                p.subscribe(m -> m.forEach(formData::add));
-                methodInfo.setFormData(Mono.just(formData));
+                //MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+                //Mono<Map<String, String>> p = (Mono<Map<String, String>>)args[i];
+                //p.subscribe(m -> m.forEach(formData::add));
+                //methodInfo.setFormData(Mono.just(formData));
+                methodInfo.setFormData((Mono<MultiValueMap<String, ?>>)args[i]);
                 methodInfo.setReqeustContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE);
             }
             PlainRequestBody annoPlainBody = parameters[i].getAnnotation(PlainRequestBody.class);
