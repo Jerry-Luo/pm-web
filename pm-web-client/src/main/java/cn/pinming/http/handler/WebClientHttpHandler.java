@@ -12,7 +12,6 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -113,7 +112,7 @@ public class WebClientHttpHandler implements HttpHandler {
 				.codecs(codecs -> codecs.defaultCodecs()
 						.maxInMemorySize(properties.getMaxInMemorySizeMegaByte() * 1024 * 1024))
 				//.filter()
-				.clientConnector(new ReactorClientHttpConnector(httpClient))
+				//.clientConnector(new ReactorClientHttpConnector(httpClient))
 				.build();
 	}
 
