@@ -29,7 +29,7 @@ public class PmWebClientProperties {
     /**
      * number of worker threads
      */
-    private int workerCount = 4;
+    private int workerCount = 2;
     /**
      * read timeout in seconds
      */

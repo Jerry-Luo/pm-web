@@ -12,6 +12,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -58,22 +59,21 @@ public class WebClientHttpHandler implements HttpHandler {
 		//ConnectionProvider provider = ConnectionProvider.elastic("elastic pool");
 		//配置固定大小连接池，如最大连接数、连接获取超时、空闲连接死亡时间等
 		ConnectionProvider provider = ConnectionProvider.fixed("fixed", properties.getMaxConnections(), properties.getAcquireTimeout());
-		HttpClient httpClient = HttpClient.create(provider).tcpConfiguration(tcpClient -> {
-			//指定 Netty 的 select 和 work线程数量
-			LoopResources loop = LoopResources.create(properties.getEventLoopThreadPrefix() + serverInfo.getClientInterfaceName(),
-					properties.getSelectCount(), properties.getWorkerCount(), true);
-			return tcpClient
-					.bootstrap(bootstrap -> BootstrapHandlers.updateLogSupport(bootstrap, new CustomLogger(HttpClient.class)))
-					.doOnConnected(connection -> {
-						//读写超时设置
-						connection.addHandlerLast(new ReadTimeoutHandler(properties.getReadTimeoutSeconds()))
-								.addHandlerLast(new WriteTimeoutHandler(properties.getWriteTimeoutSeconds()));
-					})
-					//连接超时设置
-					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutSeconds() * 1000)
-					.option(ChannelOption.TCP_NODELAY, true)
-					.runOn(loop);
-		});
+		//指定 Netty 的 select 和 work线程数量
+		LoopResources loop = LoopResources.create(properties.getEventLoopThreadPrefix() + serverInfo.getClientInterfaceName(),
+				properties.getSelectCount(), properties.getWorkerCount(), true);
+
+		HttpClient httpClient = HttpClient.create(provider).tcpConfiguration(tcpClient -> tcpClient
+				.bootstrap(bootstrap -> BootstrapHandlers.updateLogSupport(bootstrap, new CustomLogger(HttpClient.class)))
+				.doOnConnected(connection -> {
+					//读写超时设置
+					connection.addHandlerLast(new ReadTimeoutHandler(properties.getReadTimeoutSeconds()))
+							.addHandlerLast(new WriteTimeoutHandler(properties.getWriteTimeoutSeconds()));
+				})
+				//连接超时设置
+				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutSeconds() * 1000)
+				.option(ChannelOption.TCP_NODELAY, true)
+				.runOn(loop));
 		// Having enabled the wiretap, each request and response will be logged in full detail.
 		//.wiretap(true);
 
@@ -111,7 +111,7 @@ public class WebClientHttpHandler implements HttpHandler {
 				.codecs(codecs -> codecs.defaultCodecs()
 						.maxInMemorySize(properties.getMaxInMemorySizeMegaByte() * 1024 * 1024))
 				//.filter()
-				//.clientConnector(new ReactorClientHttpConnector(httpClient))
+				.clientConnector(new ReactorClientHttpConnector(httpClient))
 				.build();
 	}
 
