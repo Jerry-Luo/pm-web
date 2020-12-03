@@ -142,9 +142,8 @@ public class WebClientHttpHandler implements HttpHandler {
 		}
 		// 处理异常
 		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> {
-			String msg = String.format("请求出错, status:%s, body:%s", response.statusCode(), response.bodyToMono(String.class).block());
-			log.info(msg);
-			return Mono.just(new PmWebClientException(msg));
+			response.bodyToMono(String.class).subscribe(r-> log.info("请求出错, status:{}, body:{}", response.statusCode(), r));
+			return Mono.just(new PmWebClientException(response.statusCode().toString()));
 		});
 		// 处理body
 		if (methodInfo.isReturnFlux()) {
