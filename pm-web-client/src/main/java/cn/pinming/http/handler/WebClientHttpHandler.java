@@ -38,7 +38,6 @@ import java.util.Objects;
 public class WebClientHttpHandler implements HttpHandler {
 
 	private WebClient client;
-	private RequestBodySpec request;
 
 	private static final String PM_WEBCLIENT_START_TIME = "PM_WEBCLIENT_START_TIME";
 
@@ -123,7 +122,7 @@ public class WebClientHttpHandler implements HttpHandler {
 	@SuppressWarnings("unchecked")
 	public Object invokeRest(MethodInfo methodInfo) {
 		Object result;
-		request = this.client
+		RequestBodySpec request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
@@ -180,7 +179,7 @@ public class WebClientHttpHandler implements HttpHandler {
 		//  .bodyToMono(Void.class);
 
 		Object result;
-		request = this.client
+		RequestBodySpec request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				// 要支持 multipart 这里不指定，让框架自己决定使用什么 content-type
@@ -224,7 +223,7 @@ public class WebClientHttpHandler implements HttpHandler {
 	@SuppressWarnings("unchecked")
 	public Object invokePlain(MethodInfo methodInfo) {
 		Object result;
-		request = this.client
+		RequestBodySpec request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
