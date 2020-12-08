@@ -126,7 +126,8 @@ public class WebClientHttpHandler implements HttpHandler {
 		request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
-				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
+				.contentType(Objects.isNull(methodInfo.getReqeustContentType()) ? null : MediaType.parseMediaType(methodInfo.getReqeustContentType()))
+//				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON)
 				.headers(headers-> {
 					if(Objects.isNull(methodInfo.getRequestHeaders())){

@@ -8,6 +8,7 @@ import cn.pinming.bean.ServerInfo;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,7 +17,6 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,8 +50,9 @@ public class MetaInfoUtil {
 
     /**
      * 根据方法定义和调用参数得到调用的相关信息
+     *
      * @param method 接口中的方法
-     * @param args 方法的参数
+     * @param args   方法的参数
      * @return {@link MethodInfo}
      */
     public static MethodInfo extractMethodInfo(Method method, Object[] args) {
@@ -65,7 +66,8 @@ public class MetaInfoUtil {
 
     /**
      * 提取返回对象信息
-     * @param method 接口中定义的方法
+     *
+     * @param method     接口中定义的方法
      * @param methodInfo {@link MethodInfo}
      */
     public static void extractReturnInfo(Method method, MethodInfo methodInfo) {
@@ -81,19 +83,29 @@ public class MetaInfoUtil {
 
     /**
      * 得到泛型类型的实际类型
-     * @param genericReturnType 带泛型的返回类型
+     *
+     * @param genericType 带泛型的类型
      * @return 实际的参数类型
      */
-    public static ParameterizedTypeReference<?> extractElementType(Type genericReturnType) {
-        return ParameterizedTypeReference.forType(genericReturnType);
-//        Type[] actualTypeArguments = ((ParameterizedType) genericReturnType).getActualTypeArguments();
+    public static ParameterizedTypeReference<?> extractElementType(Type genericType) {
+
+        // 非泛型
+        if (genericType instanceof Class) {
+            return ParameterizedTypeReference.forType(genericType);
+        } else if (genericType instanceof ParameterizedType) {
+            Type[] actualTypeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
 //        return (Class<?>) actualTypeArguments[0];
+            return ParameterizedTypeReference.forType(actualTypeArguments[0]);
+        }
+
+        throw new ClassCastException("未知的参数" + genericType);
     }
 
     /**
      * 得到请求的param和body
-     * @param method 接口中定义的方法
-     * @param args 方法参数
+     *
+     * @param method     接口中定义的方法
+     * @param args       方法参数
      * @param methodInfo {@link MethodInfo}
      */
     @SuppressWarnings("unchecked")
@@ -107,16 +119,16 @@ public class MetaInfoUtil {
         for (int i = 0; i < parameters.length; i++) {
             // RequestHeader 的支持
             RequestHeader annoHeader = parameters[i].getAnnotation(RequestHeader.class);
-            if (Objects.nonNull(annoHeader)){
-                if (Objects.isNull(methodInfo.getRequestHeaders())){
+            if (Objects.nonNull(annoHeader)) {
+                if (Objects.isNull(methodInfo.getRequestHeaders())) {
                     methodInfo.setRequestHeaders(new LinkedHashMap<>());
                 }
-                if (args[i] instanceof Map){
-                    ((Map<String, String>) args[i]).forEach((k, v)->{
+                if (args[i] instanceof Map) {
+                    ((Map<String, String>) args[i]).forEach((k, v) -> {
                         methodInfo.getRequestHeaders().put(k, v);
                     });
-                }else if (args[i] instanceof String){
-                    methodInfo.getRequestHeaders().put(annoHeader.value(), (String)args[i]);
+                } else if (args[i] instanceof String) {
+                    methodInfo.getRequestHeaders().put(annoHeader.value(), (String) args[i]);
                 }
             }
 
@@ -139,11 +151,11 @@ public class MetaInfoUtil {
                 //Mono<Map<String, String>> p = (Mono<Map<String, String>>)args[i];
                 //p.subscribe(m -> m.forEach(formData::add));
                 //methodInfo.setFormData(Mono.just(formData));
-                methodInfo.setFormData((Mono<MultiValueMap<String, ?>>)args[i]);
+                methodInfo.setFormData((Mono<MultiValueMap<String, ?>>) args[i]);
                 methodInfo.setReqeustContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE);
             }
             PlainRequestBody annoPlainBody = parameters[i].getAnnotation(PlainRequestBody.class);
-            if (Objects.nonNull(annoPlainBody)){
+            if (Objects.nonNull(annoPlainBody)) {
                 methodInfo.setBody((Mono<?>) args[i]);
                 methodInfo.setBodyElementType(extractElementType(parameters[i].getParameterizedType()));
                 methodInfo.setReqeustContentType(annoPlainBody.contentType());
@@ -154,7 +166,8 @@ public class MetaInfoUtil {
 
     /**
      * 提取请求的 URL 和方法
-     * @param method 接口中定义的方法
+     *
+     * @param method     接口中定义的方法
      * @param methodInfo {@link MethodInfo}
      */
     public static void extractUrlAndMethod(Method method, MethodInfo methodInfo) {
@@ -194,23 +207,23 @@ public class MetaInfoUtil {
 
     private static void extractRequestContentType(MethodInfo methodInfo, Object a) {
         String[] produces = null;
-        if (a instanceof GetMapping){
-            GetMapping m = (GetMapping)a;
+        if (a instanceof GetMapping) {
+            GetMapping m = (GetMapping) a;
             produces = m.produces();
         }
-        if (a instanceof PutMapping){
-            PutMapping m = (PutMapping)a;
+        if (a instanceof PutMapping) {
+            PutMapping m = (PutMapping) a;
             produces = m.produces();
         }
-        if (a instanceof PostMapping){
-            PostMapping m = (PostMapping)a;
+        if (a instanceof PostMapping) {
+            PostMapping m = (PostMapping) a;
             produces = m.produces();
         }
-        if (a instanceof DeleteMapping){
-            DeleteMapping m = (DeleteMapping)a;
+        if (a instanceof DeleteMapping) {
+            DeleteMapping m = (DeleteMapping) a;
             produces = m.produces();
         }
-        if (Objects.nonNull(produces) && produces.length > 0){
+        if (Objects.nonNull(produces) && produces.length > 0) {
             methodInfo.setReqeustContentType(produces[0]);
         }
     }
