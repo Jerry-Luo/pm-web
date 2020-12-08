@@ -38,7 +38,6 @@ import reactor.netty.resources.LoopResources;
 public class WebClientHttpHandler implements HttpHandler {
 
 	private WebClient client;
-	private RequestBodySpec request;
 
 	private static final String PM_WEBCLIENT_START_TIME = "PM_WEBCLIENT_START_TIME";
 
@@ -59,22 +58,21 @@ public class WebClientHttpHandler implements HttpHandler {
 		//ConnectionProvider provider = ConnectionProvider.elastic("elastic pool");
 		//配置固定大小连接池，如最大连接数、连接获取超时、空闲连接死亡时间等
 		ConnectionProvider provider = ConnectionProvider.fixed("fixed", properties.getMaxConnections(), properties.getAcquireTimeout());
-		HttpClient httpClient = HttpClient.create(provider).tcpConfiguration(tcpClient -> {
-			//指定 Netty 的 select 和 work线程数量
-			LoopResources loop = LoopResources.create(properties.getEventLoopThreadPrefix() + serverInfo.getClientInterfaceName(),
-					properties.getSelectCount(), properties.getWorkerCount(), true);
-			return tcpClient
-					.bootstrap(bootstrap -> BootstrapHandlers.updateLogSupport(bootstrap, new CustomLogger(HttpClient.class)))
-					.doOnConnected(connection -> {
-						//读写超时设置
-						connection.addHandlerLast(new ReadTimeoutHandler(properties.getReadTimeoutSeconds()))
-								.addHandlerLast(new WriteTimeoutHandler(properties.getWriteTimeoutSeconds()));
-					})
-					//连接超时设置
-					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutSeconds() * 1000)
-					.option(ChannelOption.TCP_NODELAY, true)
-					.runOn(loop);
-		});
+		//指定 Netty 的 select 和 work线程数量
+		LoopResources loop = LoopResources.create(properties.getEventLoopThreadPrefix() + serverInfo.getClientInterfaceName(),
+				properties.getSelectCount(), properties.getWorkerCount(), true);
+
+		HttpClient httpClient = HttpClient.create(provider).tcpConfiguration(tcpClient -> tcpClient
+				.bootstrap(bootstrap -> BootstrapHandlers.updateLogSupport(bootstrap, new CustomLogger(HttpClient.class)))
+				.doOnConnected(connection -> {
+					//读写超时设置
+					connection.addHandlerLast(new ReadTimeoutHandler(properties.getReadTimeoutSeconds()))
+							.addHandlerLast(new WriteTimeoutHandler(properties.getWriteTimeoutSeconds()));
+				})
+				//连接超时设置
+				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutSeconds() * 1000)
+				.option(ChannelOption.TCP_NODELAY, true)
+				.runOn(loop));
 		// Having enabled the wiretap, each request and response will be logged in full detail.
 		//.wiretap(true);
 
@@ -123,7 +121,7 @@ public class WebClientHttpHandler implements HttpHandler {
 	@SuppressWarnings("unchecked")
 	public Object invokeRest(MethodInfo methodInfo) {
 		Object result;
-		request = this.client
+		RequestBodySpec request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
@@ -143,9 +141,8 @@ public class WebClientHttpHandler implements HttpHandler {
 		}
 		// 处理异常
 		retrieve.onStatus(status -> !status.is2xxSuccessful(), response -> {
-			String msg = String.format("请求出错, status:%s, body:%s", response.statusCode(), response.bodyToMono(String.class).block());
-			log.info(msg);
-			return Mono.just(new PmWebClientException(msg));
+			response.bodyToMono(String.class).subscribe(r-> log.info("请求出错, status:{}, body:{}", response.statusCode(), r));
+			return Mono.just(new PmWebClientException(response.statusCode().toString()));
 		});
 		// 处理body
 		if (methodInfo.isReturnFlux()) {
@@ -180,7 +177,7 @@ public class WebClientHttpHandler implements HttpHandler {
 		//  .bodyToMono(Void.class);
 
 		Object result;
-		request = this.client
+		RequestBodySpec request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				// 要支持 multipart 这里不指定，让框架自己决定使用什么 content-type
@@ -224,7 +221,7 @@ public class WebClientHttpHandler implements HttpHandler {
 	@SuppressWarnings("unchecked")
 	public Object invokePlain(MethodInfo methodInfo) {
 		Object result;
-		request = this.client
+		RequestBodySpec request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
 				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
