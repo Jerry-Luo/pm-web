@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,16 +77,16 @@ public class TestController {
 			log.error("请求异常:", e);
 		});
 
-		log.info("传个文件试试");
-		MultipartBodyBuilder builder = new MultipartBodyBuilder();
-   		builder.part("fieldPart", "fieldValue");
-   		builder.part("filePart", new FileSystemResource("C:/Users/pms/Desktop/images/n_v28fd94202c8eb436f87dd6c2e67c8ce73.jpg"));
-		Mono<String> userByForm1 = userApi.createUserByForm(Mono.just(builder.build()), "hello access token", headers);
-		userByForm1.subscribe(r->{
-			log.info("调用 multipart 返回结果 : " + r);
-		}, e -> {
-			log.error("请求异常:", e);
-		});
+		//log.info("传个文件试试");
+		//MultipartBodyBuilder builder = new MultipartBodyBuilder();
+   		//builder.part("fieldPart", "fieldValue");
+   		//builder.part("filePart", new FileSystemResource("C:/Users/pms/Desktop/images/n_v28fd94202c8eb436f87dd6c2e67c8ce73.jpg"));
+		//Mono<String> userByForm1 = userApi.createUserByForm(Mono.just(builder.build()), "hello access token", headers);
+		//userByForm1.subscribe(r->{
+		//	log.info("调用 multipart 返回结果 : " + r);
+		//}, e -> {
+		//	log.error("请求异常:", e);
+		//});
 
 	}
 
