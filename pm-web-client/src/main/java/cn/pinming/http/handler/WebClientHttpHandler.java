@@ -10,6 +10,10 @@ import cn.pinming.interfaces.HttpHandler;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import java.lang.reflect.Field;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -25,11 +29,6 @@ import reactor.netty.channel.BootstrapHandlers;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
-
-import java.lang.reflect.Field;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Objects;
 
 /**
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
@@ -125,7 +124,8 @@ public class WebClientHttpHandler implements HttpHandler {
 		RequestBodySpec request = this.client
 				.method(methodInfo.getMethod())
 				.uri(methodInfo.getUrl(), methodInfo.getParams())
-				.contentType(MediaType.parseMediaType(methodInfo.getReqeustContentType()))
+				.contentType(Objects.isNull(methodInfo.getReqeustContentType()) ? null : MediaType.parseMediaType(methodInfo.getReqeustContentType()))
+//				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON)
 				.headers(headers-> {
 					if(Objects.isNull(methodInfo.getRequestHeaders())){
