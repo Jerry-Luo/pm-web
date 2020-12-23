@@ -10,13 +10,8 @@ import cn.pinming.interfaces.HttpHandler;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-import java.lang.reflect.Field;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -29,6 +24,11 @@ import reactor.netty.channel.BootstrapHandlers;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
+
+import java.lang.reflect.Field;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Objects;
 
 /**
  * @author <a href="mailto:luojianwei@pinming.cn">LuoJianwei</a>
@@ -110,7 +110,7 @@ public class WebClientHttpHandler implements HttpHandler {
 				.codecs(codecs -> codecs.defaultCodecs()
 						.maxInMemorySize(properties.getMaxInMemorySizeMegaByte() * 1024 * 1024))
 				//.filter()
-				.clientConnector(new ReactorClientHttpConnector(httpClient))
+				//.clientConnector(new ReactorClientHttpConnector(httpClient))
 				.build();
 	}
 
