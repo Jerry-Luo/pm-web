@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
 import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
 import reactor.core.publisher.Mono;
+import reactor.netty.channel.BootstrapHandlers;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
@@ -37,6 +38,7 @@ import java.util.Objects;
 @Slf4j
 public class WebClientHttpHandler implements HttpHandler {
 
+	private static final CustomLogger customLogger = new CustomLogger(HttpClient.class);
 	private WebClient client;
 
 	private static final String PM_WEBCLIENT_START_TIME = "PM_WEBCLIENT_START_TIME";
@@ -65,7 +67,9 @@ public class WebClientHttpHandler implements HttpHandler {
 		HttpClient httpClient = HttpClient.create(provider).tcpConfiguration(tcpClient -> tcpClient
 				// bootstrap这里不能这么改，会导致每个请求都创建一个连接池, 现在并不需要这个自定义的 logger 所以暂时去掉；
 				// 具体参考 reactor.netty.resources.PooledConnectionProvider#acquire(Bootstrap b)  145 行
-				//.bootstrap(bootstrap -> BootstrapHandlers.updateLogSupport(bootstrap, new CustomLogger(HttpClient.class)))
+
+				// 每一个TCP创建会配置 TcpClientBootstrap#configure
+				.bootstrap(bootstrap -> BootstrapHandlers.updateLogSupport(bootstrap, customLogger))
 				.doOnConnected(connection -> {
 					//读写超时设置
 					connection.addHandlerLast(new ReadTimeoutHandler(properties.getReadTimeoutSeconds()))
