@@ -128,6 +128,7 @@ public class WebClientHttpHandler implements HttpHandler {
                             ObjectMapper objectMapper = Jackson2ObjectMapperBuilder.json().build();
                             List<MimeType> mimeTypes = Arrays.asList(
                                     new MimeType("application", "json", StandardCharsets.UTF_8),
+                                    new MimeType("text", "html", StandardCharsets.UTF_8),
                                     new MimeType("application", "*+json", StandardCharsets.UTF_8),
                                     new MimeType("application", "octet-stream", StandardCharsets.UTF_8)
                             );
